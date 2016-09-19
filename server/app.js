@@ -60,3 +60,26 @@ app.post('/treats', urlEncodedParser, function(req, res){
     // send back something ...
     res.send(true);
 }); // end add treat post
+
+// search treats route
+app.get('/treats?q=', urlEncodedParser, function(req, res){
+  console.log('search treats hit:', req.query);
+  var data = {name: req.query.name};
+  pg.connect(connectionString, function(err, client, done){
+    if (err){
+      console.log(err);
+    }else{
+    console.log('connected to db');
+    var resultsArray = [];
+    //search db
+    var query = client.query('SELECT * FROM treat WHERE name LIKE "%($1)%""', [data.name]);
+    query.on('row', function(row){
+      resultsArray.push(row);
+    });
+    query.on('end', function(){
+      done();
+      return res.json( resultsArray);
+    });
+    }
+  });// end pg connect
+}); // end search get
